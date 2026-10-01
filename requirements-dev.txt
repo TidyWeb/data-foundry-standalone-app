@@ -1,0 +1,4 @@
+-r requirements.txt
+# Only needed for the validation harness: python -m foundry.validate
+scipy
+matplotlib

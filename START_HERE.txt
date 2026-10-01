@@ -1,0 +1,23 @@
+DATA FOUNDRY (standalone)
+=========================
+
+Random practice tables for pandas and data visualisation, built from small simulated
+businesses. Everything runs on your own computer.
+
+You need Python 3.13 or newer (https://www.python.org/downloads/).
+
+1. Unzip this folder anywhere.
+2. Start it:
+     Windows ........ double-click  Start Data Foundry.bat
+     macOS .......... double-click  Start Data Foundry.command
+                      (first time: right-click it, choose Open, then Open again)
+     Linux .......... run  ./start.sh  in a terminal
+3. Your browser opens on Data Foundry. Leave the black window open while you use it.
+   Close that window to stop.
+
+The first start sets itself up and needs an internet connection (a minute or two).
+After that it starts straight away and works offline.
+
+Tested on Linux. The Windows and macOS launchers have not been tested yet.
+
+Licence: MIT, see LICENSE. Fonts: SIL Open Font Licence, see static/fonts/LICENSES.txt.

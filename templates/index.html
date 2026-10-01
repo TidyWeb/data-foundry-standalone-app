@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% if table %}{{ table.recipe.title }} - {% endif %}Data Foundry</title>
+    <meta name="description" content="Random practice datasets for learning pandas and data visualisation, built from small simulated businesses so the numbers make sense together.">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body{% if table %} class="has-drawer"{% endif %}>
+<header>
+    <h1>Data <span>Foundry</span></h1>
+    <p class="lead">Random practice tables for pandas and data visualisation, built from small simulated businesses.</p>
+    <p>Each dataset is a tiny business: car sales, rentals, payroll, loans, shipments and so on. The values are random, but the relationships between them are built in &mdash; bigger houses cost more, deeper discounts sell more units, longer routes deliver late &mdash; so there is something real to find with pandas and charts, and nothing here is real data.</p>
+    <div class="how">
+        <div class="step"><div class="n">1</div><h3>Pick a business</h3><p>Choose one of the 24 below, or press Surprise me. Each card says what one row means and how many columns that business can supply.</p></div>
+        <div class="step"><div class="n">2</div><h3>Set the shape</h3><p>Choose 1&ndash;{{ max_rows }} rows and how many columns you want. Core columns always appear; extras are added as you ask for more. You get a note if the business has fewer.</p></div>
+        <div class="step"><div class="n">3</div><h3>Generate, explore, download</h3><p>You get the table and a guide to every column. Save it as CSV or Excel and load it with <code>pd.read_csv</code>. Each table has a seed: enter the same seed again to get the same table back.</p></div>
+    </div>
+    <a class="shuffle" href="{{ url_for('surprise') }}">Surprise me</a>
+</header>
+
+<main>
+    {% for family in shelves %}
+    <section class="shelf">
+        <h2 style="color: {{ family.hue }}">{{ family.name }}</h2>
+        <div class="row">
+            {% for card in family.cards %}
+            <a class="card" href="{{ url_for('home', theme=card.key) }}">
+                <div class="art" style="background: {{ family.hue }}"><i>{{ card.title[0] }}</i><b>{{ card.title }}</b></div>
+                <div class="body">
+                    <div class="rm">{{ card.row_meaning }}</div>
+                    <div class="mini">
+                        <div>{% for c in card.preview_cols %}<span>{{ c }}</span>{% endfor %}</div>
+                        {% for r in card.preview_rows %}<div>{% for v in r %}<span>{{ v }}</span>{% endfor %}</div>{% endfor %}
+                    </div>
+                    <div class="meta"><span>{{ card.min_cols }}&ndash;{{ card.max_cols }} columns</span><span>Open &rarr;</span></div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </section>
+    {% endfor %}
+</main>
+
+<footer>
+    <p>Data Foundry generates fictional data for practice. Nothing here describes real people, companies or events.</p>
+</footer>
+
+{% if table %}
+<a class="veil on" href="{{ url_for('home') }}" aria-label="Close"></a>
+<aside class="drawer on" aria-label="{{ table.recipe.title }} dataset">
+    <div class="dh"><div class="art" style="background: {{ table.hue }}"><i>{{ table.recipe.title[0] }}</i><b>{{ table.recipe.title }}</b></div></div>
+    <a class="close" href="{{ url_for('home') }}" aria-label="Close">&times;</a>
+    <div class="dbody">
+        <p class="meaning">{{ table.recipe.row_meaning }}</p>
+
+        <form class="ctl" method="get" action="{{ url_for('home') }}">
+            <input type="hidden" name="theme" value="{{ table.recipe.key }}">
+            <input type="hidden" name="d" value="{{ table.date }}">
+            {% if table.messy %}<input type="hidden" name="messy" value="1">{% endif %}
+            <div><label for="rows">Rows</label><input id="rows" name="rows" type="number" min="1" max="{{ max_rows }}" value="{{ table.n_rows }}"></div>
+            <div><label for="cols">Columns</label><input id="cols" name="cols" type="number" min="1" max="{{ max_cols }}" value="{{ table.n_cols }}"></div>
+            <div><label for="seed">Seed</label><input id="seed" name="seed" type="number" min="0" max="999999999" value="{{ table.seed }}" class="wide"></div>
+            <button class="go" type="submit" style="background: {{ table.hue }}">Update</button>
+            <div><label>Data</label><div class="seg" role="group" aria-label="Data quality">
+                <a href="{{ table.clean_url }}" class="{{ '' if table.messy else 'on' }}">Clean</a><a href="{{ table.messy_url }}" class="{{ 'on' if table.messy else '' }}">Messy</a></div></div>
+            <a class="b2" href="{{ table.new_url }}">New random table</a>
+        </form>
+        <p class="hint">{{ table.recipe.title }} supplies {{ table.min_cols }}&ndash;{{ table.max_cols }} columns. Same seed and settings give the same table.</p>
+
+        {% if table.note %}<div class="note">{{ table.note }}</div>{% endif %}
+        {% if table.messy %}<div class="note messy-note">Messy: {{ table.problems }} problems planted ({{ table.n_rows }} rows asked for, {{ table.n_shown }} shown, because duplicates and stray rows are added). Find and fix them, then check against the answer key.</div>{% endif %}
+
+        <div class="tw">
+            <table>
+                <thead><tr>{% for c in table.cols %}<th>{{ c }}</th>{% endfor %}</tr></thead>
+                <tbody>
+                {% for row in table.rows %}
+                    <tr>{% for v in row %}<td{% if table.numeric[loop.index0] %} class="num"{% endif %}>{{ v }}</td>{% endfor %}</tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="bar">
+            <a class="b2" href="{{ table.csv_url }}">Download CSV</a>
+            <a class="b2" href="{{ table.xlsx_url }}">Download Excel</a>
+            {% if table.messy %}<a class="b2" href="{{ table.key_url }}">Download answer key</a>{% endif %}
+            <button class="b2" type="button" id="copy" data-text='import pandas as pd
+
+df = pd.read_csv("{{ table.csv_name }}")
+df.head()'>Copy pandas line</button>
+        </div>
+
+        <details open>
+            <summary>What the columns mean</summary>
+            <dl>{% for name, description in table.docs %}<dt>{{ name }}</dt><dd>{{ description }}</dd>{% endfor %}</dl>
+        </details>
+    </div>
+</aside>
+<script>
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape") { window.location = "{{ url_for('home') }}"; } });
+    var copy = document.getElementById("copy");
+    if (copy && navigator.clipboard) {
+        copy.addEventListener("click", function () {
+            navigator.clipboard.writeText(copy.dataset.text);
+            copy.textContent = "Copied";
+        });
+    }
+</script>
+{% endif %}
+</body>
+</html>
