@@ -1,0 +1,12 @@
+/* Tidy Web brand strip: sits above the slide-out table so it is never covered */
+:root { --bar: 44px; }
+.brandbar { position: sticky; top: 0; z-index: 10; height: var(--bar); display: flex; align-items: center; justify-content: space-between;
+            gap: 12px; padding: 0 28px; background: #04101c; color: #e8f4f8; font-size: 14px; border-bottom: 1px solid #1B9AAA55; }
+.brandbar a { color: inherit; text-decoration: none; }
+.brandbar .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: .01em; }
+.brandbar .brand img { display: block; border-radius: 6px; }
+.brandbar a:hover, .brandbar a:focus-visible { color: #34b7c7; }
+.brandbar a:focus-visible { outline: 2px solid #34b7c7; outline-offset: 3px; border-radius: 4px; }
+.veil, .drawer { top: var(--bar); }
+footer a { color: var(--accent); }
+@media (max-width: 560px) { .brandbar { padding: 0 16px; font-size: 13px; } }
