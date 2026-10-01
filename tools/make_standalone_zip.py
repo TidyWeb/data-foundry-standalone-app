@@ -10,11 +10,12 @@ import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-LAUNCHER_FILES = ["start.sh", "Start Data Foundry.command", "Start Data Foundry.bat", "START_HERE.txt"]
+LAUNCHER_FILES = ["start.sh", "Start Data Foundry.command", "Start Data Foundry.bat", "START_HERE.txt", "install-linux-launcher.sh",
+                  "icons/data-foundry.svg", "icons/data-foundry.png", "icons/data-foundry.ico"]
 LAUNCHER_DIR = ROOT / "standalone_launchers" if (ROOT / "standalone_launchers").is_dir() else ROOT
 VERSION = "0.1.0"
 FOLDER = "data-foundry-standalone"
-EXECUTABLE = {"start.sh", "Start Data Foundry.command"}
+EXECUTABLE = {"start.sh", "Start Data Foundry.command", "install-linux-launcher.sh"}
 
 
 def main():

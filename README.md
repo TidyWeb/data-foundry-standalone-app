@@ -149,6 +149,8 @@ You need Python 3.13 or later ([python.org](https://www.python.org/downloads/)).
 | macOS | double-click `Start Data Foundry.command` (first time: right-click, Open) |
 | Linux | run `./start.sh` in a terminal |
 
+Linux: run `./install-linux-launcher.sh` once to add Data Foundry to your applications menu with its own icon, then pin it to the taskbar from there.
+
 Your browser opens on Data Foundry. The first start sets itself up and needs an internet connection
 for a minute or two; after that it starts straight away and works offline. Close the window to stop.
 
