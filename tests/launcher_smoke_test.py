@@ -114,7 +114,7 @@ def build_and_extract(work_dir: Path) -> Path:
 def launcher_command(app_root: Path) -> str | list[str]:
     if os.name == "nt":
         batch_file = app_root / "Start Data Foundry.bat"
-        return f'cmd.exe /d /s /c ""{batch_file}""'
+        return f'cmd.exe /d /c call "{batch_file}"'
     if sys.platform == "darwin":
         return ["./Start Data Foundry.command"]
     return ["./start.sh"]
