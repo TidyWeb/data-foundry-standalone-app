@@ -113,8 +113,9 @@ def build_and_extract(work_dir: Path) -> Path:
 
 def launcher_command(app_root: Path) -> str | list[str]:
     if os.name == "nt":
-        batch_file = app_root / "Start Data Foundry.bat"
-        return f'cmd.exe /d /c call "{batch_file}"'
+        # Start a command interpreter and feed it the batch call over stdin.
+        # This avoids cmd.exe's special /c quoting rules for paths with spaces.
+        return ["cmd.exe", "/d"]
     if sys.platform == "darwin":
         return ["./Start Data Foundry.command"]
     return ["./start.sh"]
@@ -160,12 +161,18 @@ def run_packaged_launcher(app_root: Path, work_dir: Path, env: dict[str, str]) -
             launcher_command(app_root),
             cwd=app_root,
             env=env,
-            stdin=subprocess.DEVNULL,
+            stdin=subprocess.PIPE if os.name == "nt" else subprocess.DEVNULL,
             stdout=log,
             stderr=subprocess.STDOUT,
             **popen_options,
         )
         try:
+            if os.name == "nt":
+                assert process.stdin is not None
+                batch_file = app_root / "Start Data Foundry.bat"
+                process.stdin.write(f'call "{batch_file}"\r\n'.encode())
+                process.stdin.flush()
+
             deadline = time.monotonic() + 360
             url = None
             while time.monotonic() < deadline:
