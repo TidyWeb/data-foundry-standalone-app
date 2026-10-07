@@ -113,20 +113,7 @@ def build_and_extract(work_dir: Path) -> Path:
 
 def launcher_command(app_root: Path) -> str | list[str]:
     if os.name == "nt":
-        # PowerShell handles invoking a space-containing .bat path directly.
-        wrapper = app_root / "run-data-foundry-ci.ps1"
-        wrapper.write_text(
-            '& "$PSScriptRoot\\Start Data Foundry.bat"\r\nexit $LASTEXITCODE\r\n',
-            encoding="utf-8",
-        )
-        return [
-            "powershell.exe",
-            "-NoProfile",
-            "-ExecutionPolicy",
-            "Bypass",
-            "-File",
-            str(wrapper),
-        ]
+        return [str(app_root / "Start Data Foundry.bat")]
     if sys.platform == "darwin":
         return ["./Start Data Foundry.command"]
     return ["./start.sh"]
