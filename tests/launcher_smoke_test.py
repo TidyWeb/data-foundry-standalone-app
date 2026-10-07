@@ -113,7 +113,8 @@ def build_and_extract(work_dir: Path) -> Path:
 
 def launcher_command(app_root: Path) -> str | list[str]:
     if os.name == "nt":
-        return 'call "Start Data Foundry.bat"'
+        batch_file = app_root / "Start Data Foundry.bat"
+        return f'cmd.exe /d /s /c ""{batch_file}""'
     if sys.platform == "darwin":
         return ["./Start Data Foundry.command"]
     return ["./start.sh"]
@@ -157,7 +158,6 @@ def run_packaged_launcher(app_root: Path, work_dir: Path, env: dict[str, str]) -
     with log_path.open("w", encoding="utf-8", errors="replace") as log:
         process = subprocess.Popen(
             launcher_command(app_root),
-            shell=os.name == "nt",
             cwd=app_root,
             env=env,
             stdin=subprocess.DEVNULL,
