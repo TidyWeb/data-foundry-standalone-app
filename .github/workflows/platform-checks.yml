@@ -1,0 +1,40 @@
+name: Cross-platform app checks
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*"
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  packaged-app:
+    name: ${{ matrix.os }} / Python 3.13+
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+          - macos-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up minimum supported Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+
+      - name: Build, launch, and check the packaged app
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: python tests/launcher_smoke_test.py
