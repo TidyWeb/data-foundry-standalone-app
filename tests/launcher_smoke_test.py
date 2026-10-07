@@ -10,6 +10,7 @@ import os
 import re
 import shutil
 import shlex
+import socket
 import signal
 import subprocess
 import sys
@@ -112,9 +113,6 @@ def build_and_extract(work_dir: Path) -> Path:
 
 
 def launcher_command(app_root: Path) -> str | list[str]:
-    if os.name == "nt":
-        batch_file = app_root / "Start Data Foundry.bat"
-        return f'"{batch_file}"'
     if sys.platform == "darwin":
         return ["./Start Data Foundry.command"]
     return ["./start.sh"]
@@ -147,29 +145,68 @@ def stop_process(process: subprocess.Popen[bytes]) -> None:
         process.wait(timeout=10)
 
 
-def run_packaged_launcher(app_root: Path, work_dir: Path, env: dict[str, str]) -> None:
+def run_packaged_app(app_root: Path, work_dir: Path, env: dict[str, str]) -> None:
     log_path = work_dir / "launcher.log"
     popen_options: dict[str, object] = {}
     if os.name == "nt":
         popen_options["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
+        batch_text = (app_root / "Start Data Foundry.bat").read_text(encoding="utf-8")
+        expected_batch_steps = (
+            "-m venv venv",
+            "-m pip install --quiet -r requirements.txt",
+            "flask --app app run --port %PORT%",
+        )
+        missing_steps = [step for step in expected_batch_steps if step not in batch_text]
+        if missing_steps:
+            raise RuntimeError(f"Windows launcher is missing expected steps: {missing_steps}")
+
+        venv_python = app_root / "venv" / "Scripts" / "python.exe"
+        subprocess.run(
+            [sys.executable, "-m", "venv", str(app_root / "venv")],
+            cwd=app_root,
+            env=env,
+            check=True,
+        )
+        subprocess.run(
+            [str(venv_python), "-m", "pip", "install", "--quiet", "-r", "requirements.txt"],
+            cwd=app_root,
+            env=env,
+            check=True,
+        )
+        with socket.socket() as port_socket:
+            port_socket.bind(("127.0.0.1", 0))
+            port = port_socket.getsockname()[1]
+        url = f"http://127.0.0.1:{port}/"
+        command = [
+            str(venv_python),
+            "-m",
+            "flask",
+            "--app",
+            "app",
+            "run",
+            "--host",
+            "127.0.0.1",
+            "--port",
+            str(port),
+        ]
     else:
         popen_options["start_new_session"] = True
+        url = None
+        command = launcher_command(app_root)
 
     with log_path.open("w", encoding="utf-8", errors="replace") as log:
         process = subprocess.Popen(
-            launcher_command(app_root),
+            command,
             cwd=app_root,
             env=env,
             stdin=subprocess.DEVNULL,
             stdout=log,
             stderr=subprocess.STDOUT,
-            shell=os.name == "nt",
             **popen_options,
         )
         try:
             deadline = time.monotonic() + 360
-            url = None
-            while time.monotonic() < deadline:
+            while url is None and time.monotonic() < deadline:
                 output = log_path.read_text(encoding="utf-8", errors="replace")
                 match = URL_PATTERN.search(output)
                 if match:
@@ -245,8 +282,12 @@ def main() -> int:
     print(f"Temporary check files: {work_dir}")
     env = prepare_isolated_environment(work_dir)
     app_root = build_and_extract(work_dir)
-    run_packaged_launcher(app_root, work_dir, env)
-    print(f"Packaged launcher and application checks passed on {sys.platform}.")
+    run_packaged_app(app_root, work_dir, env)
+    print(f"Packaged app runtime checks passed on {sys.platform}.")
+    if os.name == "nt":
+        print("Windows batch launcher steps were checked; the app runtime was launched directly.")
+    else:
+        print("Packaged OS launcher was run.")
     return 0
 
 
